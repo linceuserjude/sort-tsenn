@@ -1,4 +1,43 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -90,9 +129,12 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            background-color: #28a745;
-            color: #fff;
+            margin: 0 10px;
         }
+
+        #download-html { background-color: #007bff; color: #fff; }
+        #download-png { background-color: #28a745; color: #fff; }
+        #download-excel { background-color: #dc3545; color: #fff; }
 
         @media (max-width: 768px) {
             .container { padding: 10px; }
@@ -106,6 +148,7 @@
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <h1>Результаты Сортировки Ценностей</h1>
@@ -115,6 +158,8 @@
     </div>
 
     <div class="buttons">
+        <button id="download-html">Сохранить как HTML</button>
+        <button id="download-png">Сохранить как PNG</button>
         <button id="download-excel">Скачать как Excel</button>
     </div>
 
@@ -153,7 +198,7 @@
             'Немного': 'Немного важные',
             'Важные': 'Важные',
             'Очень': 'Очень важные',
-            'Самые': 'Самые важные (ранжированные)' // Используем для отображения, но игнорируем дубли
+            'Самые': 'Самые важные (ранжированные)'
         };
 
         // Отображаем все категории, исключая "Самые" если есть rankedValues
@@ -172,6 +217,31 @@
             noRankedDiv.innerHTML = `<h2>Самые важные (ранжированные)</h2><p>Нет данных о ранжировании.</p>`;
             resultsDiv.appendChild(noRankedDiv);
         }
+
+        // Сохранение как HTML
+        document.getElementById('download-html').addEventListener('click', () => {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'results.html';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        });
+
+        // Сохранение как PNG
+        document.getElementById('download-png').addEventListener('click', () => {
+            html2canvas(document.body).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'results.png';
+                link.click();
+            }).catch(error => {
+                console.error('Ошибка при создании скриншота:', error);
+                alert('Не удалось сохранить изображение. Проверьте консоль для деталей.');
+            });
+        });
 
         // Функция для экспорта в Excel
         document.getElementById('download-excel').addEventListener('click', () => {
@@ -214,10 +284,10 @@
             }
         });
 
-        // Проверка загрузки SheetJS
-        if (typeof XLSX === 'undefined') {
-            console.error('SheetJS не загружен. Проверьте подключение к интернету или CDN.');
-            alert('Ошибка: не удалось загрузить библиотеку для экспорта в Excel. Проверьте подключение к интернету.');
+        // Проверка загрузки библиотек
+        if (typeof XLSX === 'undefined' || typeof html2canvas === 'undefined') {
+            console.error('Одна или обе библиотеки (XLSX или html2canvas) не загружены. Проверьте подключение к интернету или CDN.');
+            alert('Ошибка: не удалось загрузить необходимые библиотеки. Проверьте подключение к интернету.');
         }
     </script>
 </body>
