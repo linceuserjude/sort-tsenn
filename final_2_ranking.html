@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ранжирование Самых Важных Ценностей</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f4f9;
+            margin: 20px;
+            color: #333;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .sortable {
+            min-height: 100px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-top {
+            background-color: #e0e0e0;
+            padding: 10px;
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .card-bottom {
+            background-color: #ffffff;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+
+        #save-btn {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                font-size: 12px;
+            }
+            .card-top, .card-bottom {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Ранжирование Самых Важных Ценностей</h1>
+    <p>Перетащите карточки, чтобы расположить их от наиболее важной (сверху) к менее важной (снизу).</p>
+
+    <div class="container">
+        <div id="ranking" class="sortable"></div>
+    </div>
+
+    <div class="buttons">
+        <button id="save-btn">Сохранить</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        const ranking = document.getElementById('ranking');
+        const savedGroups = JSON.parse(localStorage.getItem('values') || '{}');
+        const mostImportant = savedGroups['Самые'] || [];
+
+        mostImportant.forEach(card => {
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card';
+            cardElement.innerHTML = `
+                <div class="card-top">${card.top}</div>
+                <div class="card-bottom">${card.bottom}</div>
+            `;
+            ranking.appendChild(cardElement);
+        });
+
+        new Sortable(ranking, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag'
+        });
+
+        document.getElementById('save-btn').addEventListener('click', () => {
+            const rankedCards = Array.from(ranking.querySelectorAll('.card')).map(card => ({
+                top: card.querySelector('.card-top').textContent,
+                bottom: card.querySelector('.card-bottom').textContent
+            }));
+            localStorage.setItem('ranked_values', JSON.stringify(rankedCards));
+            // Переход на results.html
+            window.location.href = 'C:/Users/User/Desktop/Настюшкинс/final_result.html';
+        });
+    </script>
+</body>
+</html>

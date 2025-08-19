@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сортировка Ценностей</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f4f9;
+            margin: 20px;
+            color: #333;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #source {
+            display: flex;
+            justify-content: center;
+            min-height: 100px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .groups {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .group {
+            flex: 1;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #fff;
+            min-height: 100px;
+            min-width: 150px;
+            position: relative;
+        }
+
+        .group h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .group h2:hover {
+            background-color: #f0f0f0;
+        }
+
+        .group .sortable {
+            min-height: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card {
+            width: 220px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .card.collapsed {
+            display: inline-block;
+            min-height: 20px;
+            background-color: #e0e0e0;
+            border: none;
+            box-shadow: none;
+        }
+
+        .card.collapsed .card-top {
+            font-size: 12px;
+            white-space: nowrap;
+            padding: 2px 5px;
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background-color: #e0e0e0;
+        }
+
+        .card.collapsed .card-bottom {
+            display: none;
+        }
+
+        .card.collapsed:hover {
+            width: 220px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+        }
+
+        .card.collapsed:hover .card-top {
+            background-color: #e0e0e0;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        .card.collapsed:hover .card-bottom {
+            display: block;
+            background-color: #ffffff;
+            padding: 10px;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-top {
+            background-color: #e0e0e0;
+            padding: 10px;
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .card-bottom {
+            background-color: #ffffff;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .group:nth-child(1) h2 { color: #d3d3d3; }
+        .group:nth-child(2) h2 { color: #add8e6; }
+        .group:nth-child(3) h2 { color: #90ee90; }
+        .group:nth-child(4) h2 { color: #ffd700; }
+        .group:nth-child(5) h2 { color: #ff6347; }
+
+        .buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+
+        #reset-btn { background-color: #ccc; color: #fff; }
+        #add-custom-btn { background-color: #007bff; color: #fff; }
+        #proceed-to-ranking-btn { background-color: #17a2b8; color: #fff; }
+
+        .custom-input {
+            margin-top: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .custom-input input {
+            padding: 5px;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        .custom-input button {
+            padding: 5px 10px;
+            font-size: 14px;
+            width: 100px;
+        }
+
+        @media (max-width: 768px) {
+            .groups { flex-direction: column; }
+            .group { min-width: 100%; }
+            .card { width: 100%; max-width: 300px; }
+            .card.collapsed { min-height: 16px; }
+            .card.collapsed .card-top { font-size: 10px; padding: 1px 3px; }
+            .card.collapsed:hover { width: 100%; max-width: 300px; }
+            h1 { font-size: 24px; }
+            h2 { font-size: 16px; }
+        }
+
+        @media (max-width: 480px) {
+            .card { font-size: 12px; }
+            .card.collapsed { min-height: 14px; }
+            .card.collapsed .card-top { font-size: 8px; padding: 1px 2px; }
+            .card-top, .card-bottom { padding: 8px; }
+            .card.collapsed:hover .card-top, .card.collapsed:hover .card-bottom { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Сортировка Ценностей</h1>
+    <p>Перетащите карточку в соответствующую группу, наведя на заголовок категории.</p>
+
+    <div class="container">
+        <div id="source" class="sortable"></div>
+
+        <div class="groups">
+            <div class="group">
+                <h2>Не важные <span class="counter">0</span></h2>
+                <div class="sortable"></div>
+                <div class="custom-input" id="custom-input-1">
+                    <input type="text" id="custom-top-1" placeholder="Введите заголовок (каппс)">
+                    <input type="text" id="custom-bottom-1" placeholder="Введите описание">
+                    <button onclick="addCustomCard(1)">Добавить</button>
+                </div>
+            </div>
+            <div class="group">
+                <h2>Немного важные <span class="counter">0</span></h2>
+                <div class="sortable"></div>
+                <div class="custom-input" id="custom-input-2">
+                    <input type="text" id="custom-top-2" placeholder="Введите заголовок (каппс)">
+                    <input type="text" id="custom-bottom-2" placeholder="Введите описание">
+                    <button onclick="addCustomCard(2)">Добавить</button>
+                </div>
+            </div>
+            <div class="group">
+                <h2>Важные <span class="counter">0</span></h2>
+                <div class="sortable"></div>
+                <div class="custom-input" id="custom-input-3">
+                    <input type="text" id="custom-top-3" placeholder="Введите заголовок (каппс)">
+                    <input type="text" id="custom-bottom-3" placeholder="Введите описание">
+                    <button onclick="addCustomCard(3)">Добавить</button>
+                </div>
+            </div>
+            <div class="group">
+                <h2>Очень важные <span class="counter">0</span></h2>
+                <div class="sortable"></div>
+                <div class="custom-input" id="custom-input-4">
+                    <input type="text" id="custom-top-4" placeholder="Введите заголовок (каппс)">
+                    <input type="text" id="custom-bottom-4" placeholder="Введите описание">
+                    <button onclick="addCustomCard(4)">Добавить</button>
+                </div>
+            </div>
+            <div class="group">
+                <h2>Самые важные <span class="counter">0/10</span></h2>
+                <div class="sortable" id="most-important"></div>
+                <div class="custom-input" id="custom-input-5">
+                    <input type="text" id="custom-top-5" placeholder="Введите заголовок (каппс)">
+                    <input type="text" id="custom-bottom-5" placeholder="Введите описание">
+                    <button onclick="addCustomCard(5)">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button id="reset-btn">Сбросить</button>
+        <button id="add-custom-btn">Добавить свою карточку</button>
+        <button id="proceed-to-ranking-btn" style="display: none;">Перейти к ранжированию</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        const cards = [
+            { top: "ПРИНЯТИЕ", bottom: "чтобы меня принимали таким, какой я есть" },
+            { top: "ТОЧНОСТЬ", bottom: "иметь верное мнение и убеждения" },
+            { top: "ДОСТИЖЕНИЕ", bottom: "иметь важные успехи" },
+            { top: "ПРИКЛЮЧЕНИЕ", bottom: "получать новый захватывающий опыт" },
+            { top: "ИСКУССТВО", bottom: "наслаждаться искусством или выражать себя" },
+            { top: "ПРИВЛЕКАТЕЛЬНОСТЬ", bottom: "быть физически привлекательным" },
+            { top: "РУКОВОДСТВО", bottom: "руководить другими людьми" },
+           
+        ];
+
+        let currentCardIndex = 0;
+        const source = document.getElementById('source');
+        const mostImportantGroup = document.getElementById('most-important');
+        const customInputs = document.querySelectorAll('.custom-input');
+
+        function showNextCard() {
+            if (currentCardIndex < cards.length && source.children.length === 0) {
+                source.innerHTML = `
+                    <div class="card">
+                        <div class="card-top">${cards[currentCardIndex].top}</div>
+                        <div class="card-bottom">${cards[currentCardIndex].bottom}</div>
+                    </div>
+                `;
+                currentCardIndex++;
+            } else if (currentCardIndex >= cards.length && source.children.length === 0) {
+                source.innerHTML = '<p>Все карточки распределены!</p>';
+                document.getElementById('add-custom-btn').style.display = 'inline-block';
+                document.getElementById('proceed-to-ranking-btn').style.display = 'inline-block';
+                saveGroups();
+            }
+        }
+
+        function updateCounters() {
+            document.querySelectorAll('.group').forEach(group => {
+                const counter = group.querySelector('.counter');
+                const cards = group.querySelectorAll('.card').length;
+                if (group.querySelector('#most-important')) {
+                    counter.textContent = `${cards}/10`;
+                } else {
+                    counter.textContent = cards;
+                }
+            });
+        }
+
+        function saveGroups() {
+            const groupsData = {};
+            document.querySelectorAll('.group .sortable').forEach((group, index) => {
+                const groupName = group.parentElement.querySelector('h2').textContent.split(' ')[0];
+                const cards = Array.from(group.querySelectorAll('.card')).map(card => ({
+                    top: card.querySelector('.card-top').textContent,
+                    bottom: card.querySelector('.card-bottom').textContent
+                }));
+                groupsData[groupName] = cards;
+            });
+            localStorage.setItem('values', JSON.stringify(groupsData));
+        }
+
+        function addCustomCard(groupIndex) {
+            const topInput = document.getElementById(`custom-top-${groupIndex}`);
+            const bottomInput = document.getElementById(`custom-bottom-${groupIndex}`);
+            const top = topInput.value.trim().toUpperCase();
+            const bottom = bottomInput.value.trim();
+
+            if (top && bottom) {
+                const group = document.querySelectorAll('.group')[groupIndex - 1].querySelector('.sortable');
+                const card = document.createElement('div');
+                card.className = 'card collapsed';
+                card.innerHTML = `
+                    <div class="card-top">${top}</div>
+                    <div class="card-bottom">${bottom}</div>
+                `;
+                group.appendChild(card);
+                updateCounters();
+                topInput.value = '';
+                bottomInput.value = '';
+                saveGroups();
+                if (group === mostImportantGroup && group.children.length > 10) {
+                    group.removeChild(card);
+                    alert('В категорию "Самые важные" можно добавить не более 10 карточек.');
+                }
+            } else {
+                alert('Пожалуйста, заполните оба поля.');
+            }
+        }
+
+        document.querySelectorAll('.sortable').forEach(el => {
+            new Sortable(el, {
+                group: 'values',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onAdd: function (evt) {
+                    const item = evt.item;
+                    const fromSource = evt.from === source;
+                    if (evt.to !== source) {
+                        item.classList.add('collapsed');
+                        if (evt.to === mostImportantGroup && evt.to.children.length > 10) {
+                            evt.to.removeChild(item);
+                            if (fromSource) {
+                                source.appendChild(item);
+                                item.classList.remove('collapsed');
+                            }
+                            alert('В категорию "Самые важные" можно добавить не более 10 карточек.');
+                            return;
+                        }
+                        updateCounters();
+                        if (fromSource) {
+                            showNextCard();
+                        }
+                    } else if (fromSource) {
+                        item.classList.remove('collapsed');
+                        showNextCard();
+                    }
+                },
+                onRemove: function (evt) {
+                    const item = evt.item;
+                    if (evt.to === source) {
+                        item.classList.remove('collapsed');
+                    }
+                    updateCounters();
+                },
+                onMove: function (evt) {
+                    const related = evt.related;
+                    if (related.tagName === 'H2') {
+                        const group = related.parentElement.querySelector('.sortable');
+                        const item = evt.dragged;
+                        if (group === mostImportantGroup && group.children.length >= 10) {
+                            alert('В категорию "Самые важные" можно добавить не более 10 карточек.');
+                            return false;
+                        }
+                        group.appendChild(item);
+                        item.classList.add('collapsed');
+                        updateCounters();
+                        saveGroups();
+                        return false;
+                    }
+                }
+            });
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            document.querySelectorAll('.group .sortable').forEach(group => {
+                group.innerHTML = '';
+            });
+            source.innerHTML = '';
+            currentCardIndex = 0;
+            showNextCard();
+            updateCounters();
+            document.getElementById('add-custom-btn').style.display = 'none';
+            document.getElementById('proceed-to-ranking-btn').style.display = 'none';
+        });
+
+        document.getElementById('add-custom-btn').addEventListener('click', () => {
+            customInputs.forEach(input => input.style.display = 'flex');
+            document.getElementById('add-custom-btn').style.display = 'none';
+        });
+
+        document.getElementById('proceed-to-ranking-btn').addEventListener('click', () => {
+            window.location.href = 'C:/Users/User/Desktop/Настюшкинс/final_2_ranking.html';
+        });
+
+        // Показываем первую карточку при загрузке
+        showNextCard();
+    </script>
+</body>
+</html>
